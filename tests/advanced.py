@@ -13,44 +13,51 @@ logger = logging.getLogger(__name__)
 
 
 def run_scenario():
-    logger.info("Запуск жестко заданного сценария (6 шагов по 1 сек)")
+    logger.info("Запуск жестко заданного сценария: 6 шагов по 3 с, пауза 5 с между этапами")
     with DXController() as robot:
-        # Шаг a) движение вперед 0.3 м/с, 1 сек → 0.3 м
-        logger.info("Шаг a): вперед 0.3 м/с, 1 с")
+        # Шаг a) вперед
+        logger.info("Шаг a): вперед 0.3 м/с, 3 с")
         robot.drive(v=0.3, omega=0.0)
-        time.sleep(1)
+        time.sleep(3)
+        robot.drive(0.0, 0.0)
+        time.sleep(5)
 
-        # Шаг b) движение вправо (strafe) 0.3 м/с, 1 сек → 0.3 м
-        logger.info("Шаг b): вправо 0.3 м/с, 1 с")
+        # Шаг b) вправо (strafe)
+        logger.info("Шаг b): вправо 0.3 м/с, 3 с")
         robot.drive_vector(vx=0.0, vy=0.3, omega=0.0)
-        time.sleep(1)
-
-        # Шаг c) движение по диагонали вперед-вправо
-        diag = 0.3 / sqrt(2)
-        logger.info("Шаг c): диагональ вперед-вправо 0.3 m/s, 1 с")
-        robot.drive_vector(vx=diag, vy=diag, omega=0.0)
-        time.sleep(1)
-
-        # Шаг d) движение по диагонали назад-вправо
-        logger.info("Шаг d): диагональ назад-вправо 0.3 m/s, 1 с")
-        robot.drive_vector(vx=-diag, vy=diag, omega=0.0)
-        time.sleep(1)
-
-        # Шаг e) поворот против часовой 90° за 1 сек
-        omega_90 = (pi/2) / 1.0  # rad/s
-        logger.info("Шаг e): поворот против часовой 90°, 1 с")
-        robot.drive(v=0.0, omega=omega_90)
-        time.sleep(1)
-
-        # Шаг f) поворот по часовой 90° за 1 сек
-        logger.info("Шаг f): поворот по часовой 90°, 1 с")
-        robot.drive(v=0.0, omega=-omega_90)
-        time.sleep(1)
-
-        # Завершение: стоп
-        logger.info("Стоп: остановка")
+        time.sleep(3)
         robot.drive(v=0.0, omega=0.0)
-        time.sleep(1)
+        time.sleep(5)
+
+        # Шаг c) диагональ вперед-вправо
+        diag = 0.3 / sqrt(2)
+        logger.info("Шаг c): диагональ вперед-вправо 0.3 м/с, 3 с")
+        robot.drive_vector(vx=diag, vy=diag, omega=0.0)
+        time.sleep(3)
+        robot.drive(v=0.0, omega=0.0)
+        time.sleep(5)
+
+        # Шаг d) диагональ назад-вправо
+        logger.info("Шаг d): диагональ назад-вправо 0.3 м/с, 3 с")
+        robot.drive_vector(vx=-diag, vy=diag, omega=0.0)
+        time.sleep(3)
+        robot.drive(v=0.0, omega=0.0)
+        time.sleep(5)
+
+        # Шаг e) поворот против часовой 90° за 3 с
+        omega_90 = (pi/2) / 3.0  # рад/с
+        logger.info("Шаг e): поворот против часовой 90°, 3 с")
+        robot.drive(v=0.0, omega=omega_90)
+        time.sleep(3)
+        robot.drive(v=0.0, omega=0.0)
+        time.sleep(5)
+
+        # Шаг f) поворот по часовой 90° за 3 с
+        logger.info("Шаг f): поворот по часовой 90°, 3 с")
+        robot.drive(v=0.0, omega=-omega_90)
+        time.sleep(3)
+        robot.drive(v=0.0, omega=0.0)
+        time.sleep(5)
 
     logger.info("Сценарий завершен")
 
