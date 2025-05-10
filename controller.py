@@ -1,4 +1,8 @@
-# controller.py
+#!/usr/bin/env python3
+"""
+controller.py — Высокоуровневый модуль управления шасси на MX-106 (wheel-mode)
+Добавлен метод drive_vector для векторного (strafe) управления.
+"""
 import signal, sys, time
 from contextlib import AbstractContextManager
 
@@ -20,8 +24,7 @@ class MotorGroup:
         self.ids    = ids
         self.port   = port
         self.pkt    = pkt
-        # карта инверсий {id: ±1}
-        self.invert = dict(zip(ids, invert))
+        self.invert = dict(zip(ids, invert))  # карта инверсий {id: ±1}
 
     def _w1(self, mid, addr, val):
         self.pkt.write1ByteTxRx(self.port, mid, addr, val)
@@ -87,11 +90,38 @@ class DXController(AbstractContextManager):
         vr = v + omega * half
 
         to_raw = lambda w: max(-1023, min(1023, int(w * self.scale)))
-        # порядок IDs: [FL, FR, RR, RL]
         speeds = {
-            self.ids[0]: to_raw(vl),  # переднее левое
-            self.ids[1]: to_raw(vr),  # переднее правое
-            self.ids[2]: to_raw(vr),  # заднее правое
-            self.ids[3]: to_raw(vl),  # заднее левое
+            self.ids[0]: to_raw(vl),  # FL
+            self.ids[1]: to_raw(vr),  # FR
+            self.ids[2]: to_raw(vr),  # RR
+            self.ids[3]: to_raw(vl),  # RL
         }
         self.motors.set_speed(speeds)
+
+    def drive_vector(self, vx: float, vy: float, omega: float):
+        """
+        Векторное управление для mecanum-колёс:
+          vx    — вперед (м/с)
+          vy    — вправо (м/с)
+          omega — угловая скорость (рад/с)
+        """
+        # параметры шасси
+        r = 0.025    # радиус колеса, м
+        Lx = 0.195   # межцентровое расстояние вперед/назад, м
+        Ly = 0.13    # межцентровое расстояние влево/вправо, м
+        L = Lx + Ly
+
+        # расчет угловых скоростей колес
+        w_fl = (vx - vy - omega * L) / r
+        w_fr = (vx + vy + omega * L) / r
+        w_rr = (vx - vy + omega * L) / r
+        w_rl = (vx + vy - omega * L) / r
+
+        to_raw = lambda w: max(-1023, min(1023, int(w * self.scale)))
+        raw = {
+            self.ids[0]: to_raw(w_fl),  # FL
+            self.ids[1]: to_raw(w_fr),  # FR
+            self.ids[2]: to_raw(w_rr),  # RR
+            self.ids[3]: to_raw(w_rl),  # RL
+        }
+        self.motors.set_speed(raw)
