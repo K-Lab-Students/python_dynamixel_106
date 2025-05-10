@@ -1,6 +1,5 @@
-# easy_move.py
 import time
-from controller import DXController
+from python_dynamixel_106.controller import DXController
 
 if __name__ == "__main__":
     with DXController() as robot:
