@@ -1,5 +1,5 @@
 import time
-from ..controller import DXController
+from controller import DXController
 
 if __name__ == "__main__":
     with DXController() as robot:
