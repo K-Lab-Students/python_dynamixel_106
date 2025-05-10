@@ -1,11 +1,11 @@
-from controller import DXController
+# easy_move.py
 import time
-with DXController("config.yaml") as robot:
-    # вперёд 0.2 м/с
-    robot.drive(0.2, 0.0)
-    time.sleep(2)
-    # поворот против часовой 0.5 рад/с
-    robot.drive(0.0, 0.5)
-    time.sleep(1)
-    # стоп
-    robot.drive(0.0, 0.0)
+from controller import DXController
+
+if __name__ == "__main__":
+    with DXController() as robot:
+        robot.drive(0.2, 0.0)  # вперёд
+        time.sleep(2)
+        robot.drive(0.0, 0.5)  # поворот против часовой
+        time.sleep(1)
+        robot.drive(0.0, 0.0)  # стоп
