@@ -251,3 +251,13 @@ class DXController(AbstractContextManager):
                 raw[mid] = direction * val
         dlogging.info(f"Pivot around side {side_l} -> omega={omega}, raw={raw}")
         self.motors.set_speed(raw)
+
+    def turn_left(self, omega: float):
+        """In-place rotation: counter-clockwise turn by angular speed omega (rad/s)."""
+        dlogging.info(f"Command: turn_left omega={omega}")
+        self.drive(v=0.0, omega=omega)
+
+    def turn_right(self, omega: float):
+        """In-place rotation: clockwise turn by angular speed omega (rad/s)."""
+        dlogging.info(f"Command: turn_right omega={omega}")
+        self.drive(v=0.0, omega=-omega)
