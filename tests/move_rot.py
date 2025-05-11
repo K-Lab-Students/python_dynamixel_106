@@ -23,10 +23,10 @@ logger = logging.getLogger(__name__)
 
 def main():
     parser = argparse.ArgumentParser(description="Расширенный тест движения и разворотов")
-    parser.add_argument("--speed", type=float, default=1,
-                        help="Скорость м/с для страйфа и диагоналей (default 1.0)")
-    parser.add_argument("--omega", type=float, default=2.0,
-                        help="Угловая скорость рад/с для разворотов (default 2.0)")
+    parser.add_argument("--speed", type=float, default=0.3,
+                        help="Скорость м/с для страйфа и диагоналей (default 0.3)")
+    parser.add_argument("--omega", type=float, default=1.0,
+                        help="Угловая скорость рад/с для разворотов (default 1.0)")
     parser.add_argument("--duration", type=float, default=3.0,
                         help="Длительность каждого движения в секундах (default 3.0)")
     args = parser.parse_args()
@@ -35,14 +35,14 @@ def main():
     with DXController() as robot:
         # Страйф вправо
         logger.info(f"1) страйф вправо speed={args.speed} m/s, duration={args.duration}s")
-        robot.strafe_right(args.speed)
+        robot.drive_vector(vx=0.0, vy=args.speed, omega=0.0)
         time.sleep(args.duration)
         robot.stop()
         time.sleep(2)
 
         # Страйф влево
         logger.info(f"2) страйф влево speed={args.speed} m/s, duration={args.duration}s")
-        robot.strafe_left(args.speed)
+        robot.drive_vector(vx=0.0, vy=-args.speed, omega=0.0)
         time.sleep(args.duration)
         robot.stop()
         time.sleep(2)
@@ -64,14 +64,14 @@ def main():
 
         # Поворот против часовой
         logger.info(f"5) поворот против часовой omega={args.omega} rad/s, duration={args.duration}s")
-        robot.turn_left(args.omega)
+        robot.drive(v=0.0, omega=args.omega)
         time.sleep(args.duration)
         robot.stop()
         time.sleep(2)
 
         # Поворот по часовой
         logger.info(f"6) поворот по часовой omega={args.omega} rad/s, duration={args.duration}s")
-        robot.turn_right(args.omega)
+        robot.drive(v=0.0, omega=-args.omega)
         time.sleep(args.duration)
         robot.stop()
 
