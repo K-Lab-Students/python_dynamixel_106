@@ -101,20 +101,30 @@ class DXController(AbstractContextManager):
         self.motors.set_mode(wheel=True)
 
     def _on_sig(self, *args):
-        logger.info("SIGINT received, stopping robot")
+        logger.info("SIGINT received, shutting down robot")
         self.stop()
+        self.shutdown()
         sys.exit(0)
 
     def __exit__(self, exc_type, exc, tb):
+        # On context exit, stop motion and shutdown resources
         self.stop()
+        self.shutdown()
 
     def stop(self):
-        """Остановить все движения и отключить Torque"""
+        """Stop all motion (zero speeds) without disabling torque or closing port."""
+        zero = {mid: 0 for mid in self.ids}
+        self.motors.set_speed(zero)
+        logger.info("Robot stopped")
+
+    def shutdown(self):
+        """Disable torque and close the port."""
+        # ensure motors are stopped before disabling torque
         zero = {mid: 0 for mid in self.ids}
         self.motors.set_speed(zero)
         self.motors.torque(False)
         self.port.closePort()
-        logger.info("Robot stopped and port closed")
+        logger.info("Torque OFF and port closed")
 
     def to_raw(self, w: float) -> int:
         """Перевод м/с или рад/с в raw ±1023"""
