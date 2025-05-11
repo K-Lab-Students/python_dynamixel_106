@@ -172,15 +172,11 @@ class DXController(AbstractContextManager):
         self._linear(-speed)
 
     def strafe_right(self, speed: float):
-        """Страйф вправо: rotate only right-side wheels."""
+        """Страйф вправо: mecanum vector strafe, ближние колеса внутрь, дальние наружу."""
         dlogging.info(f"Command: strafe_right speed={speed}")
-        # only front-right and rear-right wheels
-        right_ids = [self.ids[1], self.ids[2]]
-        self._side_speed(right_ids, speed)
+        self.drive_vector(vx=0.0, vy=speed, omega=0.0)
 
     def strafe_left(self, speed: float):
-        """Страйф влево: rotate only left-side wheels."""
+        """Страйф влево: mecanum vector strafe, ближние колеса внутрь, дальние наружу."""
         dlogging.info(f"Command: strafe_left speed={speed}")
-        # only front-left and rear-left wheels
-        left_ids = [self.ids[0], self.ids[3]]
-        self._side_speed(left_ids, speed)
+        self.drive_vector(vx=0.0, vy=-speed, omega=0.0)
