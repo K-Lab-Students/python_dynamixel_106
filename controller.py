@@ -114,3 +114,37 @@ class DXController(AbstractContextManager):
         # cmd_v — запрошенное значение, v_m_savg — средняя фактическая линейная скорость
         v_m_savg = (speeds_m_s[self.ids[0]] + speeds_m_s[self.ids[1]] + speeds_m_s[self.ids[2]] + speeds_m_s[self.ids[3]]) / 4
         dlogging.info(f"drive cmd_v={v} (unit), omega={omega} rad/s -> raw={raw}, v_phys_avg={v_m_savg:.3f} m/s, v_m_s={speeds_m_s}")
+
+
+    def drive_vector(self, vx: float, vy: float, omega: float):
+        """
+        Векторное управление для Mecanum (X-конфигурация)
+        vx    — вперед (м/с), vy — вправо (м/с), omega — угловая скорость (рад/с)
+        """
+        # Расчёт геометрической суммы половин баз
+        L = self.L_X + self.L_Y
+
+        # Угловые скорости каждого колеса (в рад/с):
+        w_fl = ( vx - vy - omega * L) / self.R_WHEEL
+        w_fr = ( vx + vy + omega * L) / self.R_WHEEL
+        w_rr = ( vx - vy + omega * L) / self.R_WHEEL
+        w_rl = ( vx + vy - omega * L) / self.R_WHEEL
+
+        # Перевод в «сырые» единицы
+        raw = {
+            self.ids[0]: self.to_raw(w_fl),  # FL
+            self.ids[1]: self.to_raw(w_fr),  # FR
+            self.ids[2]: self.to_raw(w_rr),  # RR
+            self.ids[3]: self.to_raw(w_rl),  # RL
+        }
+
+        # Логирование для отладки
+        speeds_m_s = {mid: raw[mid] / self.scale for mid in raw}
+        v_m_savg = sum(speeds_m_s.values()) / 4
+        dlogging.info(
+            f"drive_vector vx={vx}, vy={vy}, omega={omega} "
+            f"-> raw={raw}, v_phys_avg={v_m_savg:.3f} m/s, v_m_s={speeds_m_s}"
+        )
+
+        # Отправка на моторы
+        self.motors.set_speed(raw)
