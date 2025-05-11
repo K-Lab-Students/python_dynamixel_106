@@ -115,7 +115,8 @@ class DXController(AbstractContextManager):
         # cmd_v — запрошенное значение, v_m_savg — средняя фактическая линейная скорость
         v_m_savg = (speeds_m_s[self.ids[0]] + speeds_m_s[self.ids[1]] + speeds_m_s[self.ids[2]] + speeds_m_s[self.ids[3]]) / 4
         dlogging.info(f"drive cmd_v={v} (unit), omega={omega} rad/s -> raw={raw}, v_phys_avg={v_m_savg:.3f} m/s, v_m_s={speeds_m_s}")
-
+        # send speed commands to motors
+        self.motors.set_speed(raw)
 
     def drive_vector(self, vx: float, vy: float, omega: float):
         """
