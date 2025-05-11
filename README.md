@@ -65,6 +65,8 @@ python -m tests.turn             --omega 1.0 --duration 3.0
 python -m tests.in_place         --omega 1.0 --duration 3.0
 python -m tests.pivot_corner     --corner rr --omega 1.0 --duration 3.0
 python -m tests.pivot_side       --side right --omega 1.0 --duration 3.0
+python -m tests.tank_turn        --omega 1.0 --duration 3.0
+python -m tests.general_test     --speed 0.3 --omega 1.0 --duration 10.0
 ```
 
 ### Описание тестов
@@ -89,6 +91,12 @@ python -m tests.pivot_side       --side right --omega 1.0 --duration 3.0
 
 7. **pivot_side.py**  
    Поворот вокруг боковой оси: левая или правая сторона.
+
+8. **tank_turn.py**  
+   Танковый разворот: in-place разворот через `robot.drive(0, omega)`.
+
+9. **general_test.py**  
+   Общий сценарий: последовательное выполнение всех команд (forward, backward, strafe, diagonal, turns, pivots, tank pivot), каждая команда длится `--duration` секунд.
 
 ## Лицензия
 
