@@ -19,6 +19,8 @@ def main():
                         help="Скорость м/с (по умолчанию 0.3)")
     parser.add_argument("--duration", type=float, default=3.0,
                         help="Время движения в секундах (по умолчанию 3.0)")
+    parser.add_argument("--angle-offset", type=float, default=0.0,
+                        help="Угол коррекции движения в радианах (по умолчанию 0.0)")
     args = parser.parse_args()
 
     # Список тестов: (метод, описание)
@@ -27,7 +29,7 @@ def main():
     with DXController() as robot:
         for idx, (method, direction) in enumerate(tests, start=1):
             logger.info(f"{idx}) страйф {direction} speed={args.speed} m/s, duration={args.duration}s")
-            getattr(robot, method)(args.speed)
+            getattr(robot, method)(args.speed, args.angle_offset)
             time.sleep(args.duration)
             robot.stop()
             time.sleep(1)

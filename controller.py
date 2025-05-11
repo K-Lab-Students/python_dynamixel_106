@@ -11,6 +11,7 @@ import sys
 import time
 import logging
 from contextlib import AbstractContextManager
+import math
 
 from dynamixel_sdk import PortHandler, PacketHandler
 from config import load_config
@@ -171,12 +172,82 @@ class DXController(AbstractContextManager):
         # move backward on all wheels
         self._linear(-speed)
 
-    def strafe_right(self, speed: float):
-        """Страйф вправо: mecanum vector strafe, ближние колеса внутрь, дальние наружу."""
-        dlogging.info(f"Command: strafe_right speed={speed}")
-        self.drive_vector(vx=0.0, vy=speed, omega=0.0)
+    def strafe_right(self, speed: float, angle_offset: float = 0.0):
+        """Страйф вправо с возможностью коррекции угла: ближние колеса внутрь, дальние наружу."""
+        dlogging.info(f"Command: strafe_right speed={speed}, angle_offset={angle_offset}")
+        # Base strafe vector (y positive = right)
+        vx, vy = 0.0, speed
+        # Apply rotation offset if provided
+        if angle_offset:
+            cos_o, sin_o = math.cos(angle_offset), math.sin(angle_offset)
+            vx, vy = vx * cos_o - vy * sin_o, vx * sin_o + vy * cos_o
+        # Execute mecanum vector drive
+        self.drive_vector(vx=vx, vy=vy, omega=0.0)
 
-    def strafe_left(self, speed: float):
-        """Страйф влево: mecanum vector strafe, ближние колеса внутрь, дальние наружу."""
-        dlogging.info(f"Command: strafe_left speed={speed}")
-        self.drive_vector(vx=0.0, vy=-speed, omega=0.0)
+    def strafe_left(self, speed: float, angle_offset: float = 0.0):
+        """Страйф влево с возможностью коррекции угла: ближние колеса внутрь, дальние наружу."""
+        dlogging.info(f"Command: strafe_left speed={speed}, angle_offset={angle_offset}")
+        # Base strafe vector (y negative = left)
+        vx, vy = 0.0, -speed
+        # Apply rotation offset if provided
+        if angle_offset:
+            cos_o, sin_o = math.cos(angle_offset), math.sin(angle_offset)
+            vx, vy = vx * cos_o - vy * sin_o, vx * sin_o + vy * cos_o
+        # Execute mecanum vector drive
+        self.drive_vector(vx=vx, vy=vy, omega=0.0)
+
+    def pivot_around_corner(self, omega: float, corner: str = 'rr'):
+        """Pivot around a specified corner (fl, fr, rr, rl)."""
+        idx_map = {'fl': 0, 'fr': 1, 'rr': 2, 'rl': 3}
+        corner_l = corner.lower()
+        if corner_l not in idx_map:
+            raise ValueError(f"Unknown corner '{corner}'. Must be one of {list(idx_map.keys())}")
+        pivot_idx = idx_map[corner_l]
+        half_x = self.L_X / 2
+        half_y = self.L_Y / 2
+        positions = {
+            0: ( half_x, -half_y),  # FL
+            1: ( half_x,  half_y),  # FR
+            2: (-half_x,  half_y),  # RR
+            3: (-half_x, -half_y),  # RL
+        }
+        pivot_pos = positions[pivot_idx]
+        raw = {}
+        for i, mid in enumerate(self.ids):
+            if i == pivot_idx:
+                raw[mid] = 0
+            else:
+                dx = positions[i][0] - pivot_pos[0]
+                dy = positions[i][1] - pivot_pos[1]
+                dist = math.hypot(dx, dy)
+                linear = abs(omega) * dist
+                val = self.to_raw(linear)
+                # positive omega => clockwise rotation
+                direction = 1 if omega > 0 else -1
+                # front-right wheel spins opposite direction
+                if i == 1:
+                    direction *= -1
+                raw[mid] = direction * val
+        dlogging.info(f"Pivot around {corner_l} -> omega={omega}, raw={raw}")
+        self.motors.set_speed(raw)
+
+    def pivot_around_side(self, omega: float, side: str = 'right'):
+        """Pivot around a specified side (left or right)."""
+        side_l = side.lower()
+        if side_l not in ('left', 'right'):
+            raise ValueError(f"Unknown side '{side}'. Must be 'left' or 'right'")
+        # pivot wheels indices: right side => FR,RR; left side => FL,RL
+        pivot_idxs = [1, 2] if side_l == 'right' else [0, 3]
+        # distance from pivot axis to opposite wheels
+        dist = self.L_Y
+        linear = abs(omega) * dist
+        val = self.to_raw(linear)
+        direction = 1 if omega > 0 else -1
+        raw = {}
+        for i, mid in enumerate(self.ids):
+            if i in pivot_idxs:
+                raw[mid] = 0
+            else:
+                raw[mid] = direction * val
+        dlogging.info(f"Pivot around side {side_l} -> omega={omega}, raw={raw}")
+        self.motors.set_speed(raw)
