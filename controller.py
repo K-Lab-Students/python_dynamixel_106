@@ -148,3 +148,39 @@ class DXController(AbstractContextManager):
 
         # Отправка на моторы
         self.motors.set_speed(raw)
+
+    def _linear(self, speed: float):
+        """Helper: set linear speed for all wheels."""
+        raw = {mid: self.to_raw(speed) for mid in self.ids}
+        self.motors.set_speed(raw)
+
+    def _side_speed(self, side_ids: list, speed: float):
+        """Helper: set speed for specified side wheels only, others zero."""
+        raw = {mid: self.to_raw(speed) if mid in side_ids else 0 for mid in self.ids}
+        self.motors.set_speed(raw)
+
+    def forward(self, speed: float):
+        """Езда вперед: set same speed on all wheels."""
+        dlogging.info(f"Command: forward speed={speed}")
+        # move forward on all wheels
+        self._linear(speed)
+
+    def backward(self, speed: float):
+        """Езда назад: set same negative speed on all wheels."""
+        dlogging.info(f"Command: backward speed={speed}")
+        # move backward on all wheels
+        self._linear(-speed)
+
+    def strafe_right(self, speed: float):
+        """Страйф вправо: rotate only right-side wheels."""
+        dlogging.info(f"Command: strafe_right speed={speed}")
+        # only front-right and rear-right wheels
+        right_ids = [self.ids[1], self.ids[2]]
+        self._side_speed(right_ids, speed)
+
+    def strafe_left(self, speed: float):
+        """Страйф влево: rotate only left-side wheels."""
+        dlogging.info(f"Command: strafe_left speed={speed}")
+        # only front-left and rear-left wheels
+        left_ids = [self.ids[0], self.ids[3]]
+        self._side_speed(left_ids, speed)
