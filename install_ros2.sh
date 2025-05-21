@@ -41,7 +41,7 @@ if ! grep -q "Raspberry Pi" /proc/device-tree/model; then
     exit 1
 fi
 
-print_status "Starting ROS 2 Humble installation on Raspberry Pi..."
+print_status "Starting ROS 2 Iron installation on Raspberry Pi..."
 
 # Set up locale
 print_status "Setting up locale..."
@@ -84,8 +84,8 @@ apt update
 check_status "Updated package list" "Failed to update package list"
 
 # Install ROS 2
-print_status "Installing ROS 2 Humble..."
-apt install -y ros-humble-ros-base
+print_status "Installing ROS 2 Iron..."
+apt install -y ros-iron-ros-base
 check_status "Installed ROS 2 base" "Failed to install ROS 2 base"
 
 # Install development tools and ROS tools
@@ -126,15 +126,15 @@ check_status "Initialized rosdep" "Failed to initialize rosdep"
 # Set up environment
 print_status "Setting up environment..."
 # Remove existing ROS 2 entries from .bashrc
-sed -i '/source \/opt\/ros\/humble\/setup.bash/d' ~/.bashrc
+sed -i '/source \/opt\/ros\/iron\/setup.bash/d' ~/.bashrc
 sed -i '/source \/usr\/share\/colcon_cd\/function\/colcon_cd.sh/d' ~/.bashrc
-sed -i '/export _colcon_cd_root=\/opt\/ros\/humble\//d' ~/.bashrc
+sed -i '/export _colcon_cd_root=\/opt\/ros\/iron\//d' ~/.bashrc
 sed -i '/source ~\/ros2_venv\/bin\/activate/d' ~/.bashrc
 
 # Add new entries
-echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+echo "source /opt/ros/iron/setup.bash" >> ~/.bashrc
 echo "source /usr/share/colcon_cd/function/colcon_cd.sh" >> ~/.bashrc
-echo "export _colcon_cd_root=/opt/ros/humble/" >> ~/.bashrc
+echo "export _colcon_cd_root=/opt/ros/iron/" >> ~/.bashrc
 echo "source ~/ros2_venv/bin/activate" >> ~/.bashrc
 check_status "Updated .bashrc" "Failed to update .bashrc"
 
@@ -157,7 +157,7 @@ pip3 install \
     ros2action
 check_status "Installed ROS 2 Python packages" "Failed to install ROS 2 Python packages"
 
-print_status "ROS 2 Humble installation completed!"
+print_status "ROS 2 Iron installation completed!"
 print_status "Please run 'source ~/.bashrc' to update your environment"
 print_status "You can verify the installation by running: ros2 --version"
 
@@ -170,7 +170,7 @@ echo "4. In another terminal: ros2 run demo_nodes_py listener"
 
 # Print system information
 echo -e "\n${YELLOW}System Information:${NC}"
-echo "ROS 2 Version: Humble"
+echo "ROS 2 Version: Iron"
 echo "Architecture: $(uname -m)"
 echo "OS: $(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2)"
 echo "Python Version: $(python3 --version)" 
