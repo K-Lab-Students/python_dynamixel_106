@@ -118,14 +118,6 @@ apt install -y \
     libpocopdf-dev \
     libpocoredis-dev \
     libpocodataredis-dev \
-    libpocodatamongodb-dev \
-    libpocodataodbc-dev \
-    libpocodatamysql-dev \
-    libpocodataodbc-dev \
-    libpocozip-dev \
-    libpocopdf-dev \
-    libpocoredis-dev \
-    libpocodataredis-dev \
     libpocodatamongodb-dev
 check_status "Installed development tools" "Failed to install development tools"
 
@@ -153,22 +145,6 @@ pip3 install \
     pytest \
     pytest-cov \
     pytest-runner \
-    pytest-mock \
-    pytest-asyncio \
-    pytest-timeout \
-    pytest-repeat \
-    pytest-rerunfailures \
-    pytest-xdist \
-    pytest-benchmark \
-    pytest-env \
-    pytest-sugar \
-    pytest-html \
-    pytest-metadata \
-    pytest-ordering \
-    pytest-randomly \
-    pytest-xprocess \
-    pytest-xvfb \
-    pytest-cov \
     pytest-mock \
     pytest-asyncio \
     pytest-timeout \
