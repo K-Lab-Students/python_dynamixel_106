@@ -36,9 +36,13 @@ print_status "Starting ROS 2 Humble installation on Raspberry Pi..."
 # Set up locale
 print_status "Setting up locale..."
 apt update && apt install -y locales
-locale-gen en_US.UTF-8
-update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
-export LANG=en_US.UTF-8
+locale-gen en_GB.UTF-8
+update-locale LANG=en_GB.UTF-8
+export LANG=en_GB.UTF-8
+
+# Clean up any existing ROS 2 repository
+print_status "Cleaning up existing ROS 2 repository..."
+rm -f /etc/apt/sources.list.d/ros2.list
 
 # Add ROS 2 apt repository
 print_status "Adding ROS 2 repository..."
@@ -65,10 +69,13 @@ apt install -y \
     cmake \
     libpython3-dev \
     python3-dev \
-    python3-full
+    python3-full \
+    python3-venv
 
 # Create and activate virtual environment
 print_status "Setting up Python virtual environment..."
+# Remove existing venv if it exists
+rm -rf ~/ros2_venv
 python3 -m venv ~/ros2_venv
 source ~/ros2_venv/bin/activate
 
@@ -79,6 +86,13 @@ rosdep update
 
 # Set up environment
 print_status "Setting up environment..."
+# Remove existing ROS 2 entries from .bashrc
+sed -i '/source \/opt\/ros\/humble\/setup.bash/d' ~/.bashrc
+sed -i '/source \/usr\/share\/colcon_cd\/function\/colcon_cd.sh/d' ~/.bashrc
+sed -i '/export _colcon_cd_root=\/opt\/ros\/humble\//d' ~/.bashrc
+sed -i '/source ~\/ros2_venv\/bin\/activate/d' ~/.bashrc
+
+# Add new entries
 echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 echo "source /usr/share/colcon_cd/function/colcon_cd.sh" >> ~/.bashrc
 echo "export _colcon_cd_root=/opt/ros/humble/" >> ~/.bashrc
