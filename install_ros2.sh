@@ -86,7 +86,6 @@ apt install -y \
     libatlas-base-dev \
     gfortran \
     libhdf5-dev \
-    libhdf5-serial-dev \
     libopenmpi-dev \
     libomp-dev \
     libboost-all-dev \
@@ -101,24 +100,7 @@ apt install -y \
     libtinyxml2-dev \
     liburdfdom-dev \
     liburdfdom-headers-dev \
-    libconsole-bridge-dev \
-    libpoco-dev \
-    libpocofoundation-dev \
-    libpocoutil-dev \
-    libpoconet-dev \
-    libpoconetssl-dev \
-    libpocoxml-dev \
-    libpocojson-dev \
-    libpocodata-dev \
-    libpocodatasqlite-dev \
-    libpocodataodbc-dev \
-    libpocodatamysql-dev \
-    libpocodataodbc-dev \
-    libpocozip-dev \
-    libpocopdf-dev \
-    libpocoredis-dev \
-    libpocodataredis-dev \
-    libpocodatamongodb-dev
+    libconsole-bridge-dev
 check_status "Installed development tools" "Failed to install development tools"
 
 # Create and activate virtual environment
