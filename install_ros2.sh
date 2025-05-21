@@ -35,16 +35,16 @@ print_status "Starting ROS 2 Humble installation on Raspberry Pi..."
 
 # Set up locale
 print_status "Setting up locale..."
-locale-gen en_US en_US.UTF-8
+apt update && apt install -y locales
+locale-gen en_US.UTF-8
 update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 export LANG=en_US.UTF-8
 
 # Add ROS 2 apt repository
 print_status "Adding ROS 2 repository..."
-apt update && apt install -y software-properties-common
-apt update && apt install -y curl gnupg2
+apt update && apt install -y software-properties-common curl gnupg2
 curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/debian $(. /etc/os-release && echo $VERSION_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
 
 # Install ROS 2
 print_status "Installing ROS 2 Humble..."
@@ -64,11 +64,17 @@ apt install -y \
     git \
     cmake \
     libpython3-dev \
-    python3-dev
+    python3-dev \
+    python3-full
+
+# Create and activate virtual environment
+print_status "Setting up Python virtual environment..."
+python3 -m venv ~/ros2_venv
+source ~/ros2_venv/bin/activate
 
 # Initialize rosdep
 print_status "Initializing rosdep..."
-rosdep init
+rosdep init || true
 rosdep update
 
 # Set up environment
@@ -76,12 +82,14 @@ print_status "Setting up environment..."
 echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 echo "source /usr/share/colcon_cd/function/colcon_cd.sh" >> ~/.bashrc
 echo "export _colcon_cd_root=/opt/ros/humble/" >> ~/.bashrc
+echo "source ~/ros2_venv/bin/activate" >> ~/.bashrc
 
-# Install additional Python packages
+# Install additional Python packages in virtual environment
 print_status "Installing additional Python packages..."
+pip3 install --upgrade pip
 pip3 install -r requirements.txt
 
-# Install ROS 2 Python packages
+# Install ROS 2 Python packages in virtual environment
 print_status "Installing ROS 2 Python packages..."
 pip3 install \
     rclpy \
