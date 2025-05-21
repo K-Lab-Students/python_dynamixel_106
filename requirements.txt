@@ -1,0 +1,7 @@
+opencv-python>=4.8.0
+numpy>=1.24.0
+pyzbar>=0.1.9  # For QR code detection
+dynamixel-sdk>=3.7.0  # For Dynamixel motor control
+rospy>=1.15.15  # For ROS integration
+cv2-aruco>=0.1.0  # For ArUco marker detection
+python-dotenv>=1.0.0  # For environment variables 

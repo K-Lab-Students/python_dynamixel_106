@@ -1,103 +1,108 @@
-# Управление Mecanum-шасси на базе Dynamixel MX-106
+# Autonomous Medicine Delivery Robot
 
-Проект предоставляет единый Python API и набор CLI/скриптов для управления четырёхколёсным шасси с mecanum-колёсами на сервоприводах Dynamixel MX-106 в режиме колёс (wheel-mode).
+This system implements an autonomous medicine delivery robot for hospital environments. The robot is capable of:
+- Reading QR codes to receive delivery tasks
+- Navigating to medicine storage shelves using ArUco markers
+- Precise positioning for medicine pickup
+- Autonomous navigation to hospital wards
+- Confirming delivery by entering wards
 
-## Возможности
+## System Architecture
 
-- Инициализация и настройка порта (device, baudrate, protocol)
-- Управление линейным движением (вперёд/назад)
-- Векторное управление (страйф, диагонали)
-- Повороты: на месте, вокруг углового колеса, вокруг боковой оси
-- Набор тестовых сценариев для отладки и калибровки
+### Camera System
+- **Front Camera**: QR code detection for task reception and ward entry
+- **Side Camera**: ArUco marker detection for shelf alignment
+- **Opposite Side Camera**: Extended vision and safety monitoring
 
-## Установка
+### Navigation System
+- Precise positioning using ArUco markers
+- Mecanum wheel-based movement
+- ROS-based control system
 
-```bash
-# Клонировать репозиторий
-git clone https://github.com/ваш_путь/python_dynamixel_106.git
-cd python_dynamixel_106
+### Components
+1. **Camera Manager** (`src/camera/camera_manager.py`)
+   - Handles all camera operations
+   - QR code detection
+   - ArUco marker detection
+   - Position calculation
 
-# Создать виртуальное окружение (рекомендуется)
-python3 -m venv venv
-source venv/bin/activate
+2. **Navigation Controller** (`src/navigation/navigation_controller.py`)
+   - Precise positioning
+   - Movement control
+   - State management
 
-# Установить зависимости
-pip install dynamixel_sdk pyyaml
-```  
+3. **Main Controller** (`src/main_controller.py`)
+   - System coordination
+   - Task execution
+   - ROS integration
 
-## Конфигурация
+## Setup
 
-Создайте файл `config.yaml` или `.env` в корне проекта со следующими параметрами:
+### Prerequisites
+- Python 3.10+
+- ROS Noetic
+- OpenCV
+- Dynamixel SDK
 
-```yaml
-# config.yaml
-device: "/dev/ttyUSB0"
-baud: 57600
-protocol: 1   # версия протокола Dynamixel (1 или 2)
-ids: [2,7,8,9]
-invert: [1,-1,-1,1]    # карта инверсии направления для каждого ID
-speed_scale: 500       # масштаб скорости (м/с → raw)
+### Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/python_dynamixel_106.git
+   cd python_dynamixel_106
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Configure camera devices in `src/main_controller.py`
+
+### Usage
+1. Start ROS core:
+   ```bash
+   roscore
+   ```
+
+2. Run the main controller:
+   ```bash
+   python src/main_controller.py
+   ```
+
+## Configuration
+
+### Camera Setup
+- Front camera: Device ID 0
+- Side camera: Device ID 1
+- Opposite side camera: Device ID 2
+
+### Navigation Parameters
+- Optimal distance to shelf: 60mm
+- Distance tolerance: 5mm
+- Angle tolerance: 0.05 radians
+
+## Task Format
+QR codes should be formatted as:
+```
+medicine_id:ward1,ward2,ward3
 ```
 
-## Использование API
-
-```python
-from controller import DXController
-
-with DXController() as robot:
-    robot.forward(0.2)       # движение вперёд 0.2 м/с
-    robot.stop()             # остановка
-    robot.strafe_right(0.3)  # страйф вправо 0.3 м/с
-    robot.stop()
-    robot.turn_left(1.0)     # поворот против часовой 1 рад/с
-    robot.stop()
+Example:
+```
+med123:101,102,103
 ```
 
-## CLI (тестовые скрипты)
+## Safety Features
+- Continuous position monitoring
+- Error detection and reporting
+- Resource cleanup on shutdown
 
-Все тесты находятся в папке `tests/`. Запуск каждого теста через модульный запуск:
+## Contributing
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
-```bash
-python -m tests.forward_backward --speed 1.0 --duration 2.0
-python -m tests.strafe           --speed 0.3 --duration 3.0 --angle-offset 0.1
-python -m tests.diagonal         --speed 0.3 --duration 3.0
-python -m tests.turn             --omega 1.0 --duration 3.0
-python -m tests.in_place         --omega 1.0 --duration 3.0
-python -m tests.pivot_corner     --corner rr --omega 1.0 --duration 3.0
-python -m tests.pivot_side       --side right --omega 1.0 --duration 3.0
-python -m tests.tank_turn        --omega 1.0 --duration 3.0
-python -m tests.general_test     --speed 0.3 --omega 1.0 --duration 10.0
-```
-
-### Описание тестов
-
-1. **forward_backward.py**  
-   Движение вперёд/назад с задаваемой высокой скоростью.
-
-2. **strafe.py**  
-   Страйф вправо и влево с опцией `--angle-offset` (коррекция угла).
-
-3. **diagonal.py**  
-   Диагональные перемещения: вперёд-вправо, вперёд-влево, назад-вправо, назад-влево.
-
-4. **turn.py**  
-   Повороты на месте: по и против часовой стрелки.
-
-5. **in_place.py**  
-   Ещё один сценарий in-place вращения с явным разделением направлений.
-
-6. **pivot_corner.py**  
-   Поворот вокруг указанного углового колеса (`fl`, `fr`, `rr`, `rl`).
-
-7. **pivot_side.py**  
-   Поворот вокруг боковой оси: левая или правая сторона.
-
-8. **tank_turn.py**  
-   Танковый разворот: in-place разворот через `robot.drive(0, omega)`.
-
-9. **general_test.py**  
-   Общий сценарий: последовательное выполнение всех команд (forward, backward, strafe, diagonal, turns, pivots, tank pivot), каждая команда длится `--duration` секунд.
-
-## Лицензия
-
-Проект распространяется под лицензией MIT. См. файл `LICENSE`.
+## License
+This project is licensed under the MIT License - see the LICENSE file for details. 

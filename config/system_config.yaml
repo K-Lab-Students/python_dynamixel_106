@@ -1,0 +1,68 @@
+# System Configuration
+
+# Map settings
+map_file: "data/labyrinth_map.json"
+
+# Sensor configuration
+sensors:
+  lidar:
+    port: "/dev/ttyUSB1"
+    baud_rate: 115200
+    scan_frequency: 10  # Hz
+    
+  gyro:
+    port: "/dev/ttyUSB0"
+    baud_rate: 9600
+    update_rate: 100  # Hz
+    
+  cameras:
+    front:
+      device_id: 0
+      resolution: [640, 480]
+      fps: 30
+      
+    side:
+      device_id: 1
+      resolution: [640, 480]
+      fps: 30
+      
+    opposite:
+      device_id: 2
+      resolution: [640, 480]
+      fps: 30
+
+# Servo configuration
+servos:
+  gripper:
+    id: 1
+    min_angle: 0
+    max_angle: 180
+    default_position: 0  # Closed position
+    
+  arm:
+    id: 2
+    min_angle: 0
+    max_angle: 180
+    default_position: 90  # Middle position
+
+# Navigation parameters
+navigation:
+  linear_velocity_max: 0.5  # m/s
+  angular_velocity_max: 1.0  # rad/s
+  position_tolerance: 0.05  # m
+  angle_tolerance: 0.1  # rad
+  path_update_rate: 10  # Hz
+  
+# Task parameters
+task:
+  medicine_pickup_time: 2.0  # seconds
+  ward_delivery_time: 3.0  # seconds
+  battery_warning_threshold: 20.0  # percent
+  emergency_stop_timeout: 5.0  # seconds
+
+# Logging configuration
+logging:
+  level: "INFO"
+  file: "logs/robot.log"
+  max_size: 10485760  # 10MB
+  backup_count: 5 
