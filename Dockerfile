@@ -49,6 +49,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     lsb-release \
     software-properties-common \
     wget \
+    ninja-build \
+    pkg-config \
+    libasio-dev \
+    libtinyxml-dev \
+    libcunit1-dev \
+    libssl-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    libyaml-dev \
+    libzstd-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user
