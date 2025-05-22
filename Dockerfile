@@ -44,6 +44,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     liburdfdom-dev \
     liburdfdom-headers-dev \
     libconsole-bridge-dev \
+    curl \
+    gnupg2 \
+    lsb-release \
+    software-properties-common \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user
@@ -91,17 +95,16 @@ RUN pip3 install -r requirements.txt
 
 # Initialize rosdep
 RUN rosdep init || true
-# rosdep update
-
-# Create entrypoint script
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Set ownership of /ros2_ws to rosuser
 RUN chown -R rosuser:rosuser /ros2_ws
 
 # Switch to non-root user
 USER rosuser
+
+# Create entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["bash"] 
