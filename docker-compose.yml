@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  ros2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/ros2_ws/src
+      - ros2_data:/ros2_ws
+    environment:
+      - ROS_DOMAIN_ID=0
+      - ROS_LOCALHOST_ONLY=0
+    network_mode: host
+    privileged: true
+    devices:
+      - /dev:/dev
+    tty: true
+    stdin_open: true
+
+volumes:
+  ros2_data:
+    driver: local 
