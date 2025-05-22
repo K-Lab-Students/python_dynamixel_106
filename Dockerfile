@@ -84,27 +84,30 @@ RUN pip3 install --upgrade pip && \
     pytest-xprocess \
     pytest-xvfb
 
-# Create ROS 2 workspace
-WORKDIR /ros2_ws
+# Create ROS 2 workspace and set permissions
+RUN mkdir -p /ros2_ws && \
+    chown -R rosuser:rosuser /ros2_ws
 
-# Copy requirements file
-COPY requirements.txt .
+# Copy requirements file and build script
+COPY requirements.txt /ros2_ws/
+COPY build_ros2.sh /ros2_ws/
+RUN chmod +x /ros2_ws/build_ros2.sh
 
 # Install project dependencies
-RUN pip3 install -r requirements.txt
+RUN pip3 install -r /ros2_ws/requirements.txt
 
 # Initialize rosdep
 RUN rosdep init || true
 
-# Set ownership of /ros2_ws to rosuser
-RUN chown -R rosuser:rosuser /ros2_ws
+# Create entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Switch to non-root user
 USER rosuser
 
-# Create entrypoint script
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Set working directory
+WORKDIR /ros2_ws
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["bash"] 
