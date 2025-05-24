@@ -3,12 +3,19 @@ FROM ros:jazzy
 # (Optional) Install Python 3.11 if you need it instead of 3.10
 # RUN apt-get update && apt-get install -y python3.11 python3.11-venv python3.11-dev
 
-# Set up your environment, install pip, etc.
-RUN apt-get update && apt-get install -y python3-pip python3-venv
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    python3-venv \
+    python3-full \
+    libzbar0 \
+    libopencv-dev \
+    python3-opencv \
+    && rm -rf /var/lib/apt/lists/*
 
-# (Optional) Set up a virtual environment
-# RUN python3 -m venv /opt/venv
-# ENV PATH="/opt/venv/bin:$PATH"
+# Set up a virtual environment
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Install Python dependencies
 COPY requirements.txt /workspace/

@@ -1,0 +1,1 @@
+# Logs package for camera images, movements, and system events 
