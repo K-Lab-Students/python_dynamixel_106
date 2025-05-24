@@ -6,6 +6,7 @@ from src.navigation.map_manager import MapManager
 from src.navigation.navigation_controller import NavigationController
 from src.sensors.sensor_manager import SensorManager
 from src.actuators.servo_controller import ServoController
+from src.logs.logger_manager import LoggerManager
 
 @dataclass
 class SystemState:
@@ -16,6 +17,8 @@ class SystemState:
     error_state: Optional[str] = None
     battery_level: float = 100.0
     sensor_status: Dict[str, bool] = None
+    position: tuple = (0.0, 0.0)  # x, y position
+    heading: float = 0.0  # heading in radians
 
 class MainController:
     """Main controller coordinating all system components."""
@@ -38,6 +41,9 @@ class MainController:
             'opposite_camera': False
         }
         
+        # Initialize logging system
+        self.logger_manager = LoggerManager()
+        
         # Initialize components
         self.sensor_manager = None
         self.servo_controller = None
@@ -52,8 +58,15 @@ class MainController:
             bool: True if initialization was successful
         """
         try:
+            # Log system startup
+            self.logger_manager.log_system_event(
+                "system_startup", 
+                {"config": self.config}, 
+                "info"
+            )
+            
             # Initialize sensor manager
-            self.sensor_manager = SensorManager(self.config['sensors'])
+            self.sensor_manager = SensorManager(self.config['sensors'], self.logger_manager)
             await self.sensor_manager.initialize()
             
             # Initialize servo controller
@@ -75,11 +88,27 @@ class MainController:
             
             self.state.is_initialized = True
             self.logger.info("System initialized successfully")
+            
+            # Log successful initialization
+            self.logger_manager.log_system_event(
+                "initialization_complete",
+                {"sensor_status": self.state.sensor_status},
+                "info"
+            )
+            
             return True
             
         except Exception as e:
             self.state.error_state = f"Initialization error: {str(e)}"
             self.logger.error(f"Failed to initialize system: {str(e)}")
+            
+            # Log initialization error
+            self.logger_manager.log_system_event(
+                "initialization_error",
+                {"error": str(e)},
+                "error"
+            )
+            
             return False
             
     async def start(self):
@@ -91,7 +120,15 @@ class MainController:
         self.state.is_running = True
         self.logger.info("Starting main control loop")
         
+        # Log system start
+        self.logger_manager.log_system_event(
+            "main_loop_start",
+            {"mode": self.state.current_mode},
+            "info"
+        )
+        
         try:
+            loop_count = 0
             while self.state.is_running:
                 # Get sensor data
                 sensor_data = await self.sensor_manager.get_all_sensor_data()
@@ -104,8 +141,33 @@ class MainController:
                     qr_data = sensor_data.camera_data['front'][0]
                     self.navigation_controller.handle_qr_code(qr_data)
                     
+                    # Log QR handling
+                    self.logger_manager.log_system_event(
+                        "qr_handled",
+                        {"qr_data": qr_data, "camera": "front"},
+                        "info"
+                    )
+                    
                 # Update navigation
                 linear_vel, angular_vel = self.navigation_controller.update()
+                
+                # Update position and heading (simplified - would come from actual sensors)
+                self.state.position = (
+                    self.state.position[0] + linear_vel * 0.1,  # 0.1s update rate
+                    self.state.position[1]
+                )
+                self.state.heading += angular_vel * 0.1
+                
+                # Log movement every 50 iterations (5 seconds at 10Hz)
+                if loop_count % 50 == 0:
+                    self.logger_manager.log_movement(
+                        linear_vel=linear_vel,
+                        angular_vel=angular_vel,
+                        position=self.state.position,
+                        heading=self.state.heading,
+                        battery_level=self.state.battery_level,
+                        mode=self.state.current_mode
+                    )
                 
                 # Apply movement commands (to be implemented)
                 # self.motor_controller.set_velocities(linear_vel, angular_vel)
@@ -113,13 +175,29 @@ class MainController:
                 # Check for low battery
                 if self.state.battery_level < 20.0:
                     self.logger.warning("Low battery, returning to charging station")
+                    
+                    # Log low battery event
+                    self.logger_manager.log_system_event(
+                        "low_battery",
+                        {"battery_level": self.state.battery_level},
+                        "warning"
+                    )
+                    
                     await self._return_to_charging()
                     
+                loop_count += 1
                 await asyncio.sleep(0.1)  # 10Hz control loop
                 
         except Exception as e:
             self.state.error_state = f"Runtime error: {str(e)}"
             self.logger.error(f"Error in main control loop: {str(e)}")
+            
+            # Log runtime error
+            self.logger_manager.log_system_event(
+                "runtime_error",
+                {"error": str(e), "loop_count": loop_count},
+                "error"
+            )
             
         finally:
             await self.cleanup()
@@ -131,6 +209,13 @@ class MainController:
             
         self.state.current_mode = "mapping"
         self.logger.info("Starting mapping mode")
+        
+        # Log mode change
+        self.logger_manager.log_system_event(
+            "mode_change",
+            {"new_mode": "mapping", "previous_mode": "idle"},
+            "info"
+        )
         
         # TODO: Implement mapping logic
         
@@ -148,18 +233,50 @@ class MainController:
         self.state.current_mode = "delivery"
         self.logger.info(f"Starting delivery task: {medicine_id} -> {ward_sequence}")
         
+        # Log delivery start
+        self.logger_manager.log_system_event(
+            "delivery_start",
+            {
+                "medicine_id": medicine_id,
+                "ward_sequence": ward_sequence,
+                "start_position": self.state.position
+            },
+            "info"
+        )
+        
         success = self.navigation_controller.start_delivery_task(medicine_id, ward_sequence)
         if not success:
             self.state.error_state = "Failed to start delivery task"
+            
+            # Log delivery failure
+            self.logger_manager.log_system_event(
+                "delivery_start_failed",
+                {"medicine_id": medicine_id, "ward_sequence": ward_sequence},
+                "error"
+            )
             
     async def stop(self):
         """Stop the system."""
         self.state.is_running = False
         self.logger.info("Stopping system")
         
+        # Log system stop
+        self.logger_manager.log_system_event(
+            "system_stop",
+            {"final_position": self.state.position, "battery_level": self.state.battery_level},
+            "info"
+        )
+        
     async def cleanup(self):
         """Clean up resources."""
         self.logger.info("Cleaning up resources")
+        
+        # Log cleanup start
+        self.logger_manager.log_system_event(
+            "cleanup_start",
+            {"final_state": self.state.__dict__},
+            "info"
+        )
         
         if self.sensor_manager:
             await self.sensor_manager.cleanup()
@@ -167,8 +284,18 @@ class MainController:
         if self.servo_controller:
             await self.servo_controller.cleanup()
             
+        # Cleanup logger (save all remaining logs)
+        await self.logger_manager.cleanup()
+        
         self.state.is_initialized = False
         self.state.is_running = False
+        
+        # Final log
+        self.logger_manager.log_system_event(
+            "cleanup_complete",
+            {"session_summary": self.logger_manager.get_session_summary()},
+            "info"
+        )
         
     def _update_sensor_status(self):
         """Update the status of all sensors."""
@@ -184,4 +311,12 @@ class MainController:
     async def _return_to_charging(self):
         """Return to charging station."""
         self.logger.info("Returning to charging station")
+        
+        # Log return to charging
+        self.logger_manager.log_system_event(
+            "return_to_charging",
+            {"current_position": self.state.position, "battery_level": self.state.battery_level},
+            "warning"
+        )
+        
         # TODO: Implement return to charging logic 
